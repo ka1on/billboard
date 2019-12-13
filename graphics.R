@@ -14,7 +14,7 @@ features <- read_excel(tf)
 # load in billboard weekly rank data
 
 billboard <- read.csv("https://query.data.world/s/tpw4liiutfaztvftwockqqhu44yssi", header=TRUE, stringsAsFactors=FALSE) %>%
-  mutate(date = mdy(WeekID))
+  mutate(date = mdy(WeekID), song_label = paste(Song, Performer, sep = " by "))
 
 # create a timelessness score based on number of weeks spent in weekly top 100 and the rank.
 # A natural way to score a single’s success on the charts would be to take an integral to find the area
@@ -24,26 +24,21 @@ billboard <- read.csv("https://query.data.world/s/tpw4liiutfaztvftwockqqhu44yssi
 
 timelessness <- billboard %>%
   filter(Week.Position < 11) %>%
-  group_by(SongID, Song) %>%
+  group_by(song_label, SongID) %>%
   summarize(timelessness_score = sum(11 - Week.Position)) %>%
   arrange(desc(timelessness_score))
 
 # take top 15 timeless songs for graphic
 timelessness_15 <- timelessness %>%
+  ungroup() %>%
   slice(1:15)
 
 # top 15 data
 top_15 <- timelessness_15 %>%
-  inner_join(billboard, by = "SongID")
+  inner_join(billboard, by = "song_label")
 
-## the input should be the song pulled from top_15 df
 
-# graph weekly song rank over time for the inputted song
-top_15 %>%
-  filter(Song == input$song) %>%
-  ggplot(aes(x = date, y = Week.Position)) +
-  geom_line() +
-  scale_y_reverse()
+write_rds(top_15, "billboard_shiny/top_15.rds")
 
 # join timelessness score data with song feature data by songID
 data <- timelessness %>%
@@ -123,15 +118,19 @@ data <- data %>%
 data <- data %>%
   inner_join(lex_diversity_per_year, by = c("Song" = "title"))
 
+data <- data %>%
+  drop_na()
+
 model <- lm(data, formula = timelessness_score ~ lex_density + lex_diversity + danceability)
 tidy(model)
+
 
 data %>%
   ggplot(aes(x = lex_density, y = timelessness_score)) +
   geom_point() +
-  geom_smooth(formula = timelessness_score ~ lex_density)
+  geom_smooth(formula = timelessness_score ~ lex_density, method = "glm")
 
 data %>%
   ggplot(aes(x = danceability, y = timelessness_score)) +
   geom_point() +
-  geom_smooth(formula = timelessness_score ~ danceability)
+  geom_smooth(method = "glm", formula = timelessness_score ~ danceability)
