@@ -24,7 +24,7 @@ billboard <- read.csv("https://query.data.world/s/tpw4liiutfaztvftwockqqhu44yssi
 
 timelessness <- billboard %>%
   filter(Week.Position < 11) %>%
-  group_by(SongID) %>%
+  group_by(SongID, Song) %>%
   summarize(timelessness_score = sum(11 - Week.Position)) %>%
   arrange(desc(timelessness_score))
 
@@ -104,3 +104,34 @@ lyrics_filtered <- lyrics_clean %>%
 #maybe have the frequently used words by decade? have a bar plot and a wordcloud? timeless words?
 
 #lexical density by time and then timelessness by lexical density
+
+lex_diversity_per_year <- lyrics_clean %>%
+  unnest_tokens(word, lyrics) %>%
+  group_by(title,year) %>%
+  summarise(lex_diversity = n_distinct(word)) %>%
+  arrange(desc(lex_diversity)) 
+
+lex_density_per_year <- lyrics_clean %>%
+  unnest_tokens(word, lyrics) %>%
+  group_by(title,year) %>%
+  summarise(lex_density = n_distinct(word)/n()) %>%
+  arrange(desc(lex_density))
+
+data <- data %>%
+  inner_join(lex_density_per_year, by = c("Song" = "title"))
+
+data <- data %>%
+  inner_join(lex_diversity_per_year, by = c("Song" = "title"))
+
+model <- lm(data, formula = timelessness_score ~ lex_density + lex_diversity + danceability)
+tidy(model)
+
+data %>%
+  ggplot(aes(x = lex_density, y = timelessness_score)) +
+  geom_point() +
+  geom_smooth(formula = timelessness_score ~ lex_density)
+
+data %>%
+  ggplot(aes(x = danceability, y = timelessness_score)) +
+  geom_point() +
+  geom_smooth(formula = timelessness_score ~ danceability)
