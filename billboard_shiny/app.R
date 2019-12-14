@@ -186,7 +186,7 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                             dream job would be to work for Spotify. I can be reached via email at kcao@college.harvard.edu", align = "center"),
                           br(),
                           fluidRow(
-                          embed_url("https://youtu.be/uvwEeelhjNQ"),
+                          embed_url("https://youtu.be/SLeUN1avOAI"),
                           align = "center"
                           )
 
