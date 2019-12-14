@@ -38,6 +38,7 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                           br(),
                           p("I compiled a variety of data sources in order to complete my analysis. I needed to be able to analyze song popularity over time, 
                             audio features of songs (as control variables), and the lyrics. I used three datasets."),
+                          uiOutput("tab1"),
                           p("The first dataset contains every weekly Hot 100 singles chart from Billboard.com between 8/2/1958 and 6/22/2019. There are 317,175 entries 
                             with details on the song and artist name, rank, date, and total number of weeks charting at that point."),
                           uiOutput("tab"),
@@ -49,7 +50,7 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                           br(),
                           p("My name is Katie Cao and I'm a junior at Harvard College studying Economics with a secondary in Psychology. I love music and data analysis and my 
                             dream job would be to work for Spotify. I can be reached via email at kcao@college.harvard.edu"),
-                          embed_url("https://youtu.be/xul-o8x5nio")
+                          embed_url("https://youtu.be/uvwEeelhjNQ")
                           ),
                  tabPanel("Timelessness",
                           h3("How can we measure a song's success?", align = "center"),
@@ -95,7 +96,7 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                                               plotOutput("timeless_words")),
                                     tabPanel("Lexical Diversity",
                                              br(),
-                                             h4("Lyrics use an increasing diverse vocalubary over time."),
+                                             h4("Lyrics use an increasingly diverse vocabulary over time."),
                                              br(),
                                              p("The more varied a vocabulary a text possesses, the higher its lexical diversity. 
                                                Song Vocabulary is a representation of how many unique words are used in a song. 
@@ -115,7 +116,7 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                                              plotOutput("density")),
                                       tabPanel("Sentiment Analysis",
                                                br(),
-                                               h4("Lyric sentiments has remained relatively the same over time."),
+                                               h4("Lyric sentiments have remained relatively the same over time."),
                                                br(),
                                                p("Sentiment analysis is a type of text mining which aims to determine the opinion and subjectivity of its content. 
                                                  When applied to lyrics, the results can be representative of not only the artist's attitudes, but can also reveal 
@@ -242,6 +243,11 @@ server <- function(input, output) {
    url <- a("this link", href="https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/")
    output$tab <- renderUI({
      tagList("The second dataset contains values for each of the 28,000+ tracks pulled from the Spotify Web API. A complete and thorough data dictionary can be referenced at", url)
+   })
+   url1 <- a("this link", href="https://data.world/kcmillersean/billboard-hot-100-1958-2017")
+
+   output$tab1 <- renderUI({
+     tagList("The first two datasets can be found at", url1)
    })
 }
 
