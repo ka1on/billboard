@@ -14,6 +14,13 @@ popular_artists <- read_rds("popular_artists.rds")
 sentiment_decades <- read_rds("sentiment_decades.rds")
 lyrics_nrc_sub <- read_rds("lyrics_nrc_sub.rds")
 model_table <- read_rds("model_table.rds")
+theme_lyrics <- function() 
+{
+  theme(plot.title = element_text(hjust = 0.5),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        legend.position = "none")
+}
 
 
 ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis",
@@ -148,11 +155,12 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                                                  br(),
                                                  selectInput("Select one of the top 20 most popular Artists.", "Choose an Artist:",
                                                              inputId = "artist",
-                                                             choices = popular_artists)
+                                                             choices = popular_artists$artist)
                                                  ),
-                                     mainPanel(
-                                       plotOutput("artist_nrc"))
-                                     )))
+                                                 mainPanel(
+                                                   plotOutput("artist_nrc"))
+                                               ))
+                                    )
                           ),
                  tabPanel("Predicting Timelessness",
                           h4("Model Description", align = "center"),
@@ -187,7 +195,7 @@ server <- function(input, output) {
        ggplot(aes(x = date, y = Week.Position)) +
        geom_line() +
        scale_y_reverse() +
-       labs(x = "Date (Month-Year)", y = "Weekly Rank", title = paste(input$song, "Billboard Weekly Rank", sep = " :")) +
+       labs(x = "Date (Month-Year)", y = "Weekly Rank", title = paste(input$song, "Billboard Weekly Rank", sep = ": ")) +
        theme_classic() + 
        theme(plot.title = element_text(hjust = 0.5)) +
        scale_x_date(labels = date_format("%m-%Y"))
@@ -221,7 +229,7 @@ server <- function(input, output) {
    output$artist_nrc <- renderPlot({
      lyrics_nrc_sub %>%
        filter(artist == input$artist) %>%
-       count(title, sentiment, decade) %>%
+       count(title, sentiment) %>%
        mutate(sentiment = reorder(sentiment, n), title = reorder(title, n)) %>%
        ggplot(aes(sentiment, n, fill = sentiment)) +
        geom_col() +
@@ -230,9 +238,8 @@ server <- function(input, output) {
        theme(panel.grid.major.x = element_blank(),
              axis.text.x = element_blank()) +
        labs(x = NULL, y = NULL) +
-       ggtitle(paste(input$artist, "NRC Sentiment Lyrical Analysis", sep = " :")) +
+       ggtitle(paste(input$artist, "NRC Sentiment Lyrical Analysis", sep = ": ")) +
        coord_flip()
-     
    }, height = 750)
    
    getPage<-function() {
