@@ -269,11 +269,12 @@ lyrics_nrc_sub <- lyrics_tidy %>%
   inner_join(get_sentiments("nrc")) %>%
   filter(!sentiment %in% c("positive", "negative"))
 
+
+
 popular_artists <- lyrics_nrc_sub %>%
   count(artist) %>%
   arrange(desc(n)) %>%
-  slice(1:20) %>%
-  pull(artist)
+  slice(1:20)
 
 sentiment_artist <- lyrics_nrc_sub %>%
   filter(artist == input$artist) %>%

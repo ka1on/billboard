@@ -24,41 +24,6 @@ theme_lyrics <- function()
 
 
 ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis",
-                 tabPanel("About",
-                          br(),
-                          fluidRow(
-                            img(src = "music.png"),
-                            align = "center"
-                          ),
-                          h3("Purpose"),
-                          br(),
-                          p("As a music lover, I've spent hours pouring over my lyrics and raving about my favorite songs. 
-                            While it may seem difficult to quantify the quality of an artform like music, for my project, I sought out to 
-                            investigate how a song's lyrics affects its timelessness. 
-                            Timelessness is a bit of an abstract concept, but using weekly Billboard charting data, it's 
-                            possible to analyze a song's persistence over time. I decided to use text mining and sentiment analysis tools to break down the lyrical content of 
-                            popular songs, and analyzed these metrics for songs across the years. Ultimately, I found that repetitive lyrics and a diverse lyrical vocabulary are both significantly 
-                            and positively correlated with a song's timelessness, even while controlling for potential confounding variables like 
-                            energy, valence, and tempo."),
-                          br(),
-                          h3("Data"),
-                          br(),
-                          p("I compiled a variety of data sources in order to complete my analysis. I needed to be able to analyze song popularity over time, 
-                            audio features of songs (as control variables), and the lyrics. I used three datasets."),
-                          uiOutput("tab1"),
-                          p("The first dataset contains every weekly Hot 100 singles chart from Billboard.com between 8/2/1958 and 6/22/2019. There are 317,175 entries 
-                            with details on the song and artist name, rank, date, and total number of weeks charting at that point."),
-                          uiOutput("tab"),
-                          p("The last dataset contains lyrics of 5701 Billboard Top 100 Songs from 1960 to 2016. It's important to note that while combining this dataset with the prior 
-                            two, I lost quite a few observations because of varying song titles and missing values. Ultimately, the regression is performed on a dataset of 4607 observations. 
-                            The lyrical analysis however, breaks out the words for each song, and looks at 39,000+ observations."),
-                          br(),
-                          h3("About Me"),
-                          br(),
-                          p("My name is Katie Cao and I'm a junior at Harvard College studying Economics with a secondary in Psychology. I love music and data analysis and my 
-                            dream job would be to work for Spotify. I can be reached via email at kcao@college.harvard.edu"),
-                          embed_url("https://youtu.be/uvwEeelhjNQ")
-                          ),
                  tabPanel("Timelessness",
                           h3("How can we measure a song's success?", align = "center"),
                           br(),
@@ -179,6 +144,52 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                             every word at least once has a 14.22 higher timelessness score than a song with all unique words. Every additional unique word in the lyrics is 
                             associated with a 0.02 increase in the timelessness score. Though the effect of a higher proportion of positive sentiment words in lyrics is not significant at 
                             the 0.01 level, it is still negatively associated, meaning on average, more timeless songs have more negative sentiments.")
+                          ),
+                 tabPanel("About",
+                          br(),
+                          fluidRow(
+                            img(src = "music.png"),
+                            align = "center"
+                          ),
+                          h3("Purpose", align = "center"),
+                          br(),
+                          p("As a music lover, I've spent hours pouring over my lyrics and raving about my favorite songs. 
+                            While it may seem difficult to quantify the quality of an artform like music, for my project, I sought out to 
+                            investigate how a song's lyrics affects its timelessness. 
+                            Timelessness is a bit of an abstract concept, but using weekly Billboard charting data, it's 
+                            possible to analyze a song's persistence over time. I decided to use text mining and sentiment analysis tools to break down the lyrical content of 
+                            popular songs, and analyzed these metrics for songs across the years. Ultimately, I found that repetitive lyrics and a diverse lyrical vocabulary are both significantly 
+                            and positively correlated with a song's timelessness, even while controlling for potential confounding variables like 
+                            energy, valence, and tempo.", align = "center"),
+                          br(),
+                          h3("Data", align = "center"),
+                          br(),
+                          p("I compiled a variety of data sources in order to complete my analysis. I needed to be able to analyze song popularity over time, 
+                            audio features of songs (as control variables), and the lyrics. I used three datasets.", align = "center"),
+                          fluidRow(
+                            uiOutput("tab1"),
+                            align = "center"
+                          ),
+                          p("The first dataset contains every weekly Hot 100 singles chart from Billboard.com between 8/2/1958 and 6/22/2019. There are 317,175 entries 
+                            with details on the song and artist name, rank, date, and total number of weeks charting at that point.", align = "center"),
+                          fluidRow(
+                            uiOutput("tab"),
+                            align = "center"
+                          ),
+                          p("The last dataset contains lyrics of 5701 Billboard Top 100 Songs from 1960 to 2016. It's important to note that while combining this dataset with the prior 
+                            two, I lost quite a few observations because of varying song titles and missing values. Ultimately, the regression is performed on a dataset of 4607 observations. 
+                            The lyrical analysis however, breaks out the words for each song, and looks at 39,000+ observations.", align = "center"),
+                          br(),
+                          h3("About Me", align = "center"),
+                          br(),
+                          p("My name is Katie Cao and I'm a junior at Harvard College studying Economics with a secondary in Psychology. I love music and data analysis and my 
+                            dream job would be to work for Spotify. I can be reached via email at kcao@college.harvard.edu", align = "center"),
+                          br(),
+                          fluidRow(
+                          embed_url("https://youtu.be/uvwEeelhjNQ"),
+                          align = "center"
+                          )
+
                           )
               )
 
