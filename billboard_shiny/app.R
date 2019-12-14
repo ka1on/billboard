@@ -41,14 +41,15 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                           p("The first dataset contains every weekly Hot 100 singles chart from Billboard.com between 8/2/1958 and 6/22/2019. There are 317,175 entries 
                             with details on the song and artist name, rank, date, and total number of weeks charting at that point."),
                           uiOutput("tab"),
-                          p("The last dataset contains lyrics of 5701 Billbaord Top 100 Songs from 1960 to 2016. It's important to note that while combining this dataset with the prior 
+                          p("The last dataset contains lyrics of 5701 Billboard Top 100 Songs from 1960 to 2016. It's important to note that while combining this dataset with the prior 
                             two, I lost quite a few observations because of varying song titles and missing values. Ultimately, the regression is performed on a dataset of 4607 observations. 
                             The lyrical analysis however, breaks out the words for each song, and looks at 39,000+ observations."),
                           br(),
                           h3("About Me"),
                           br(),
                           p("My name is Katie Cao and I'm a junior at Harvard College studying Economics with a secondary in Psychology. I love music and data analysis and my 
-                            dream job would be to work for Spotify. I can be reached via email at kcao@college.harvard.edu")
+                            dream job would be to work for Spotify. I can be reached via email at kcao@college.harvard.edu"),
+                          embed_url("https://youtu.be/xul-o8x5nio")
                           ),
                  tabPanel("Timelessness",
                           h3("How can we measure a song's success?", align = "center"),
@@ -62,7 +63,7 @@ ui <- navbarPage(theme = shinytheme("simplex"), "Billboard Top 100 Song Analysis
                               The graph to the right shows a song's Billboard Weekly Top 100 rank over time 
                               and its associated timelessness score."),
                               p("The timelessness score is out of 100, with 100 being the most timeless and 0 being 
-                                the least timeless. Timelessness is calcuated using the area under the rank over time curve, 
+                                the least timeless. Timelessness is calculated using the area under the rank over time curve, 
                                 weighted by the total number of weeks spent on the top 100 chart. This score accounts 
                                 for each song's weekly rank and the number of weeks spent at those ranks, heavily 
                                 favoring songs that chart for many weeks."),

@@ -2,12 +2,21 @@ library(httr)
 library(readxl)
 library(lubridate)
 library(gridExtra) #viewing multiple plots together
-library(tidytext) #text mining
+library(tidytext) #Text mining
+library(textdata)
+library(tidyr) #Spread, separate, unite, text mining (also included in the tidyverse package)
+library(widyr) #Use for pairwise correlation
 library(wordcloud2) #creative visualizations
 library(scales)
 library(billboard)
 library(mgcv)
 library(MASS)
+library(olsrr)
+library(gt)
+library(broom)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
 library(tidyverse)
 
 # Billboard data source: https://data.world/kcmillersean/billboard-hot-100-1958-2017
@@ -25,9 +34,8 @@ features <- read_excel(tf)
 
 # Create a timelessness score based on number of weeks spent in weekly top 100 and the rank.
 # A natural way to score a single’s success on the charts would be to take an integral to find the area
-# under the curves we’ve drawn.  I decided only to count areas where the single was in the top 10.
-# In the below graph, the area of the region above the horizontal line would be found to give the score
-# (more precisely, I took the sum of max(0, 11-chart rank) for each single over all weeks):
+# under the curves we’ve drawn. I will weight each week's rank by the weeks charted at that point to favor
+# long-charting songs
 
 timelessness <- billboard %>%
   group_by(song_label, SongID) %>%
@@ -49,9 +57,7 @@ top_20 <- timelessness_20 %>%
 
 # join timelessness score data with song feature data by songID
 data <- timelessness %>%
-  inner_join(billboard, by = "SongID") %>%
-  inner_join(features, by = "SongID") %>%
-  rename(song_label = song_label.x)
+  inner_join(features, by = "SongID")
 
 # The lyrics dataset is only 1960-2016, so the dataset will be limited to those.
 #Lyrics from songs on Billboards Hot 100 from 1960 to 2016
@@ -133,7 +139,6 @@ my_colors <- c("#E69F00", "#56B4E9", "#009E73", "#CC79A7", "#D55E00")
 theme_lyrics <- function() 
 {
   theme(plot.title = element_text(hjust = 0.5),
-        axis.ticks = element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         legend.position = "none")
@@ -179,62 +184,125 @@ diversity_plot <- lex_diversity_per_year %>%
              alpha = .4, 
              size = 1, 
              position = "jitter") + 
-  stat_smooth(formula = y ~ x, color = "black", se = FALSE, method = "lm") +
+  stat_smooth(color = "black", method = "lm") +
   geom_smooth(color = "blue") +
-  ggtitle("Lexical Diversity") +
+  ggtitle("Lexical Diversity of Song Lyrics (1960 - 2016)") +
   xlab("Year") + 
   ylab("Lexical Diversity") +
   scale_color_manual(values = my_colors) +
   theme_classic() + 
-  theme_lyrics()
+  theme_lyrics() +
+  scale_x_continuous(breaks = seq(1960, 2020, by=10))
 
-diversity_plot
 
 lex_density_per_year <- lyrics_clean %>%
   unnest_tokens(word, lyrics) %>%
   group_by(song_label,year) %>%
-  summarise(lex_density = n_distinct(word)/n()) %>%
-  arrange(desc(lex_density))
+  summarise(repetition = 1 - n_distinct(word)/n()) %>%
+  arrange(desc(repetition))
 
 density_plot <- lex_density_per_year %>%
-  ggplot(aes(year, lex_density)) +
+  ggplot(aes(year, repetition)) +
   geom_point(color = my_colors[3],
              alpha = .4, 
              size = 1, 
              position = "jitter") + 
-  stat_smooth(formula = y ~ x, color = "black", se = FALSE, method = "lm") +
-  geom_smooth(color = "blue") +
-  ggtitle("Lexical Density") +
+  geom_smooth(method = "lm") +
+  ggtitle("Repetition of Song Lyrics (1960 - 2016)") +
   xlab("Year") + 
-  ylab("Lexical Density") +
+  ylab("Proportion of Lyrics Repeated") +
   scale_color_manual(values = my_colors) +
   theme_classic() + 
-  theme_lyrics()
+  theme_lyrics() +
+  scale_x_continuous(breaks = seq(1960, 2020, by=10))
 
-density_plot
 
-data <- data %>%
-  inner_join(lex_density_per_year, by = c("Song" = "title"))
+data_combined <- data %>%
+  inner_join(lex_density_per_year, by = "song_label")
 
-data <- data %>%
-  inner_join(lex_diversity_per_year, by = c("Song" = "title"))
+data_combined <- data_combined %>%
+  inner_join(lex_diversity_per_year, by = "song_label")
 
-data <- data %>%
+data_combined <- data_combined %>%
+  inner_join(lyrics_bing, by = "song_label")
+lyrics_bing
+
+data_combined <- data_combined %>%
   drop_na()
 
-model <- lm(data, formula = timelessness_score ~ lex_density + lex_diversity + danceability)
-tidy(model)
+
+labels <- c(
+  `(Intercept)` = "Intercept",
+  repetition = "Repetitiveness",
+  lex_diversity = "Vocabulary Diversity", 
+  prop_pos = "Positive Sentiment", 
+  tempo = "Tempo",
+  energy = "Energy",
+  valence = "Valence"
+)
+model <- lm(data_combined, formula = timelessness_score ~ repetition + lex_diversity + prop_pos + tempo + energy + valence)
+
+tab_model(model,
+          p.style = "a",
+          pred.labels = labels,
+          dv.labels = "Timelessness",
+          string.ci = "Conf. Int (95%)",
+          file = "billboard_shiny/regression.html")
 
 
-data %>%
-  ggplot(aes(x = lex_density, y = timelessness_score)) +
-  geom_point() +
-  geom_smooth(formula = timelessness_score ~ lex_density, method = "glm")
+# Sentiment Analysis
+lyrics_tidy <- lyrics_clean %>%
+  unnest_tokens(word, lyrics) %>% #Break the lyrics into individual words
+  filter(!word %in% undesirable_words) %>% #Remove undesirables
+  filter(!nchar(word) < 3) %>% #Words like "ah" or "oo" used in music
+  anti_join(stop_words) #Data provided by the tidytext package
+lyrics_bing <- lyrics_tidy %>%
+  inner_join(get_sentiments("bing")) %>%
+  group_by(song_label, sentiment) %>%
+  summarise(n = n()) %>%
+  mutate(prop_pos = n / sum(n)) %>%
+  filter(sentiment == "positive")
 
-data %>%
-  ggplot(aes(x = danceability, y = timelessness_score)) +
-  geom_point() +
-  geom_smooth(method = "glm", formula = timelessness_score ~ danceability)
+lyrics_nrc <- lyrics_tidy %>%
+  inner_join(get_sentiments("nrc"))
+lyrics_nrc_sub <- lyrics_tidy %>%
+  inner_join(get_sentiments("nrc")) %>%
+  filter(!sentiment %in% c("positive", "negative"))
+
+popular_artists <- lyrics_nrc_sub %>%
+  count(artist) %>%
+  arrange(desc(n)) %>%
+  slice(1:20) %>%
+  pull(artist)
+
+sentiment_artist <- lyrics_nrc_sub %>%
+  filter(artist == input$artist) %>%
+  count(title, sentiment, decade) %>%
+  mutate(sentiment = reorder(sentiment, n), title = reorder(title, n)) %>%
+  ggplot(aes(sentiment, n, fill = sentiment)) +
+  geom_col() +
+  facet_wrap(~title) +
+  theme_lyrics() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_blank()) +
+  labs(x = NULL, y = NULL) +
+  ggtitle("NRC Sentiment Song Analysis") +
+  coord_flip()
+
+sentiment_decades <- lyrics_nrc_sub %>%
+  count(song_label, sentiment, decade) %>%
+  mutate(sentiment = reorder(sentiment, n), song_label = reorder(song_label, n)) %>%
+  ggplot(aes(sentiment, n, fill = sentiment)) +
+  geom_col() +
+  facet_wrap(~decade) +
+  theme_lyrics() +
+  theme(panel.grid.major.x = element_blank(),
+        axis.text.x = element_blank()) +
+  labs(x = NULL, y = NULL) +
+  ggtitle("NRC Sentiment Song Analysis") +
+  coord_flip()
+
+
 
 
 
@@ -244,3 +312,7 @@ write_rds(timelessness_20, "billboard_shiny/timelessness_20.rds")
 write_rds(timeless_words_graphic, "billboard_shiny/timeless_words_graphic.rds")
 write_rds(diversity_plot, "billboard_shiny/diversity_plot.rds")
 write_rds(density_plot, "billboard_shiny/density_plot.rds")
+write_rds(popular_artists, "billboard_shiny/popular_artists.rds")
+write_rds(sentiment_decades, "billboard_shiny/sentiment_decades.rds")
+write_rds(lyrics_nrc_sub, "billboard_shiny/lyrics_nrc_sub.rds")
+write_rds(model_table, "billboard_shiny/model_table.rds")
