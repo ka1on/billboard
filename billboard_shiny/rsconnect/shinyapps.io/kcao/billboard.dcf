@@ -5,9 +5,9 @@ account: kcao
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1597344
-bundleId: 2666234
+bundleId: 2666781
 url: https://kcao.shinyapps.io/billboard/
-when: 1576272308.26328
+when: 1576293860.36892
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: top_15.rds
